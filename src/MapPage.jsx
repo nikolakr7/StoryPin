@@ -1,11 +1,13 @@
 // src/MapPage.jsx
 
 import { useState, useRef } from 'react';
-import { useLoaderData, useNavigate } from 'react-router-dom';
+import { useLoaderData } from 'react-router-dom';
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api';
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
 
+import Navbar from './Navbar';
 import SearchField from './SearchField';
 import FilterUI from './FilterUI';
 import PinSidebar from './PinSidebar';
@@ -15,7 +17,7 @@ import AddStoryModal from './AddStoryModal';
 
 const mapContainerStyle = {
   width: '100%',
-  height: '100vh',
+  height: 'calc(100vh - 64px)', // Subtract navbar height
 };
 const mapCenter = { lat: 43.6532, lng: -79.3832 };
 const mapOptions = {
@@ -30,15 +32,33 @@ function MapPage() {
     libraries: ["places"],
   });
 
-  const { allPins, mode } = useLoaderData();
-  const navigate = useNavigate();
+  const { allPins: initialPins, mode } = useLoaderData();
 
+  const [allPins, setAllPins] = useState(initialPins);
   const [filterTag, setFilterTag] = useState('all');
   const [selectedPin, setSelectedPin] = useState(null);
   const [formPinData, setFormPinData] = useState(null);
-  
+
   const mapRef = useRef(null);
   const onMapLoad = (map) => { mapRef.current = map; };
+
+  // Function to refresh pins data
+  const refreshPins = async () => {
+    try {
+      const pinsCollection = collection(db, 'pins');
+      const pinsSnapshot = await getDocs(pinsCollection);
+      const updatedPins = pinsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAllPins(updatedPins);
+    } catch (error) {
+      console.error('Error refreshing pins:', error);
+    }
+  };
+
+  // Callback when story is added
+  const handleStoryAdded = () => {
+    refreshPins();
+    setFormPinData(null);
+  };
 
   const filteredPins = allPins.filter(pin => {
     if (mode === 'add') return true;
@@ -46,25 +66,28 @@ function MapPage() {
     return pin.desireTags?.includes(filterTag);
   });
   
-  if (loadError) return <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>Error loading maps</Box>;
-  if (!isLoaded) return <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}><CircularProgress /></Box>;
+  if (loadError) return (
+    <>
+      <Navbar />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 64px)' }}>Error loading maps</Box>
+    </>
+  );
+  if (!isLoaded) return (
+    <>
+      <Navbar />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 64px)' }}><CircularProgress /></Box>
+    </>
+  );
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
+    <>
+      <Navbar />
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       
       {/* --- Column 1: UI Sidebar --- */}
       <Box sx={{ width: 380, p: 2, bgcolor: 'background.paper', boxShadow: 3, zIndex: 10, display: 'flex', flexDirection: 'column' }}>
-        
-        <Button 
-          onClick={() => navigate('/')}
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          sx={{ mb: 2, alignSelf: 'flex-start' }}
-        >
-          Back to Home
-        </Button>
-        
-        <Typography variant="h5" component="h1" fontWeight="bold">
+
+        <Typography variant="h5" component="h1" fontWeight="bold" sx={{ mb: 2 }}>
           {mode === 'find' ? 'Find Experiences' : 'Add Your Story'}
         </Typography>
         
@@ -133,12 +156,14 @@ function MapPage() {
 
       {/* --- Modal --- */}
       {formPinData && (
-        <AddStoryModal 
-          pinData={formPinData} 
+        <AddStoryModal
+          pinData={formPinData}
           onClose={() => setFormPinData(null)}
+          onStoryAdded={handleStoryAdded}
         />
       )}
-    </Box>
+      </Box>
+    </>
   );
 }
 

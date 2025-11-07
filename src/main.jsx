@@ -9,6 +9,9 @@ import './index.css';
 
 import Home from './Home';
 import MapPage from './MapPage';
+import ProfilePage from './ProfilePage';
+import BookmarksPage from './BookmarksPage';
+import { AuthProvider } from './AuthContext';
 import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -37,11 +40,21 @@ const router = createHashRouter([
     element: <MapPage />,
     loader: mapLoader, // Run this function before rendering
   },
+  {
+    path: "/profile",
+    element: <ProfilePage />,
+  },
+  {
+    path: "/bookmarks",
+    element: <BookmarksPage />,
+  },
 ]);
 
 const root = createRoot(document.getElementById('root'));
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>
 );

@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns a resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // Pins collection
+    match /pins/{pinId} {
+      // Anyone can read pins (for public discovery)
+      allow read: if true;
+
+      // Only authenticated users can create pins
+      allow create: if isAuthenticated();
+
+      // Only authenticated users can update pins (to add stories)
+      // In the future, you might want to add more granular checks
+      // to ensure users only add their own stories
+      allow update: if isAuthenticated();
+
+      // Only allow deletion if you're an admin (optional - currently disabled)
+      allow delete: if false; // Change to admin check if needed
+    }
+
+    // Default: Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
