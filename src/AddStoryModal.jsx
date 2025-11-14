@@ -45,20 +45,19 @@ function AddStoryModal({ pinData, onClose, onStoryAdded }) {
       return;
     }
 
-    if (!photo) {
-      setError("Please add a photo.");
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Upload photo to Firebase Storage
-      const photoName = `images/${uuidv4()}-${photo.name}`;
-      const storageRef = ref(storage, photoName);
-      await uploadBytes(storageRef, photo);
-      const downloadURL = await getDownloadURL(storageRef);
+      let downloadURL = null;
+
+      // Upload photo to Firebase Storage only if provided
+      if (photo) {
+        const photoName = `images/${uuidv4()}-${photo.name}`;
+        const storageRef = ref(storage, photoName);
+        await uploadBytes(storageRef, photo);
+        downloadURL = await getDownloadURL(storageRef);
+      }
 
       // Create story object with author info and timestamp
       const newStoryObject = {
@@ -66,7 +65,7 @@ function AddStoryModal({ pinData, onClose, onStoryAdded }) {
         title,
         story,
         desireTag,
-        photoUrl: downloadURL,
+        photoUrl: downloadURL || 'https://via.placeholder.com/400x300?text=No+Image',
         authorId: user.uid,
         authorName: user.displayName,
         authorPhoto: user.photoURL,
@@ -171,13 +170,12 @@ function AddStoryModal({ pinData, onClose, onStoryAdded }) {
         </FormControl>
 
         <Button variant="outlined" component="label" disabled={!user || isLoading}>
-          {isLoading ? 'Uploading...' : 'Upload Photo'}
+          {isLoading ? 'Uploading...' : 'Upload Photo (Optional)'}
           <input
             type="file"
             hidden
             onChange={(e) => setPhoto(e.target.files[0])}
             accept="image/*"
-            required
           />
         </Button>
         {photo && (
