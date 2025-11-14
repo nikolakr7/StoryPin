@@ -34,3 +34,8 @@ src/firebase.js
 PHASE_1_SUMMARY.md
 TESTING_GUIDE.md
 FIREBASE_SETUP.md
+
+# AI tool directories
+.claude/
+.cursor/
+.github/copilot/
