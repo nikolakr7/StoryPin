@@ -31,6 +31,6 @@ node_modules
 src/firebase.js
 
 # md files
-PHASE_1_SUMMARRY.md
+PHASE_1_SUMMARY.md
 TESTING_GUIDE.md
 FIREBASE_SETUP.md

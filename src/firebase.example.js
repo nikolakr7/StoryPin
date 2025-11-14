@@ -1,4 +1,4 @@
-// src/firebase.example.js  <-- THIS FILE IS PUBLIC
+// src/firebase.example.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
