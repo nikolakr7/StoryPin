@@ -1,16 +1,23 @@
-# React + Vite
+# StoryPin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application for newcomers/tourists to find and share real-world experiences. Instead of just searching for "restaurants," you can search for "first date" or "good_food" vibes. Then, you can see what others had to say about what you're looking for, through personal stories and photo collections. StoryPin lets you craft your trip itinerary around personal desires and genuine connection, all in one place.
 
-Currently, two official plugins are available:
+Live Demo: https://nikolakr7.github.io/StoryPin/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# What It Does
 
-## React Compiler
+This app has two main features:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Find Experiences: You can search for a location on the map and filter all the pins by a specific "desire tag" (e.g., "nightlife," "study," "great_view"). When you click a pin, you can see all the stories and photos other users have left, with the stories matching your filter sorted to the top.
 
-## Expanding the ESLint configuration
+Add Your Story: You can search for any location in the world using the Google Places search bar. You can then create a new pin (or add to an existing one) by uploading a photo, writing a title, sharing your story, and adding a preset "desire tag."
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Tech Stack
+
+Frontend: React, React Router
+
+Mapping: Google Maps API, Google Places API
+
+Backend: Firebase (Firestore & Storage)
+
+Build/Deploy: Vite, GitHub Pages
