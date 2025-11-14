@@ -29,3 +29,8 @@ node_modules
 
 # Firebase config file
 src/firebase.js
+
+# md files
+PHASE_1_SUMMARRY.md
+TESTING_GUIDE.md
+FIREBASE_SETUP.md
