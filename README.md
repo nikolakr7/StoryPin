@@ -1,6 +1,6 @@
 # StoryPin
 
-A web application for finding and sharing real-world experiences. Instead of just searching for "restaurants," you can search for "first date" or "good_food" vibes.
+A web application for newcomers/tourists to find and share real-world experiences. Instead of just searching for "restaurants," you can search for "first date" or "good_food" vibes. Then, you can see what others had to say about what you're looking for, through personal stories and photo collections. StoryPin lets you craft your trip itinerary around personal desires and genuine connection, all in one place.
 
 Live Demo: https://nikolakr7.github.io/StoryPin/
 
