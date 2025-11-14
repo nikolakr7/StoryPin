@@ -33,8 +33,9 @@ service cloud.firestore {
       // to ensure users only add their own stories
       allow update: if isAuthenticated();
 
-      // Only allow deletion if you're an admin (optional - currently disabled)
-      allow delete: if false; // Change to admin check if needed
+      // Allow authenticated users to delete pins
+      // This allows users to delete pins when removing their last story
+      allow delete: if isAuthenticated();
     }
 
     // Default: Deny all other access
