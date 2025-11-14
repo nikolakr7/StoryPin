@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Paper, Grid, Chip, CircularProgress, Card, CardContent, CardMedia } from '@mui/material';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { Box, Typography, Avatar, Paper, Grid, Chip, CircularProgress, Card, CardContent, CardMedia, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Snackbar, Alert } from '@mui/material';
+import { collection, query, where, getDocs, doc, updateDoc, arrayRemove, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { useAuth } from './AuthContext';
 import Navbar from './Navbar';
@@ -8,11 +8,16 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArticleIcon from '@mui/icons-material/Article';
 import PublicIcon from '@mui/icons-material/Public';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function ProfilePage() {
   const { user } = useAuth();
   const [userStories, setUserStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [storyToDelete, setStoryToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const fetchUserStories = async () => {
@@ -53,6 +58,61 @@ function ProfilePage() {
 
     fetchUserStories();
   }, [user]);
+
+  const handleDeleteClick = (story) => {
+    setStoryToDelete(story);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setStoryToDelete(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!storyToDelete) return;
+
+    setDeleting(true);
+    try {
+      const pinRef = doc(db, 'pins', storyToDelete.pinId);
+
+      // Get the current pin data
+      const pinDoc = await getDoc(pinRef);
+      if (!pinDoc.exists()) {
+        throw new Error('Pin not found');
+      }
+
+      const pinData = pinDoc.data();
+      const updatedStories = pinData.stories.filter(s => s.id !== storyToDelete.id);
+
+      // If this is the last story in the pin, delete the entire pin
+      if (updatedStories.length === 0) {
+        await deleteDoc(pinRef);
+        setSnackbar({ open: true, message: 'Story deleted successfully! Pin removed as it was the last story.', severity: 'success' });
+      } else {
+        // Otherwise, just remove the story from the pin's stories array
+        await updateDoc(pinRef, {
+          stories: updatedStories
+        });
+        setSnackbar({ open: true, message: 'Story deleted successfully!', severity: 'success' });
+      }
+
+      // Update local state to remove the deleted story
+      setUserStories(prevStories => prevStories.filter(s => s.id !== storyToDelete.id));
+
+    } catch (error) {
+      console.error('Error deleting story:', error);
+      setSnackbar({ open: true, message: 'Failed to delete story. Please try again.', severity: 'error' });
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setStoryToDelete(null);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   if (!user) {
     return (
@@ -174,7 +234,24 @@ function ProfilePage() {
           <Grid container spacing={3}>
             {userStories.map((story, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
-                <Card>
+                <Card sx={{ position: 'relative' }}>
+                  <IconButton
+                    onClick={() => handleDeleteClick(story)}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'rgba(255, 255, 255, 0.9)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 1)',
+                        color: 'error.main'
+                      },
+                      zIndex: 1
+                    }}
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                   <CardMedia
                     component="img"
                     height="200"
@@ -203,6 +280,51 @@ function ProfilePage() {
             ))}
           </Grid>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleDeleteCancel}
+        >
+          <DialogTitle>Delete Story?</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete "{storyToDelete?.title}"? This action cannot be undone.
+              {storyToDelete && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                  <Typography variant="body2" fontWeight="bold">
+                    Note: If this is the last story in this pin, the entire pin will be removed from the map.
+                  </Typography>
+                </Box>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color="error"
+              variant="contained"
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Success/Error Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </>
   );
